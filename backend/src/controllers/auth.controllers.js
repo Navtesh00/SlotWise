@@ -1,25 +1,37 @@
 import { User } from '../models/user.model.js';
+import { ProviderAvailability } from '../models/providerAvailability.model.js';
 import { generateToken, setTokenCookie } from '../utils/jwt.js';
 
 export const register = async (req, res) => {
     try {
-        const { name, email, password, role } = req.body;
+        const { name, email, password, role, dayOfWeek, startTime, endTime } = req.body;
 
         if (!name || !email || !password) {
-            return res.status(400).json({ message: 'Name, email and password are required' });
+            return res.status(400).json({ success: false, message: 'Name, email and password are required' });
         }
 
         if (role === 'admin') {
-            return res.status(403).json({ message: 'Cannot self-register as admin' });
+            return res.status(403).json({ success: false, message: 'Cannot self-register as admin' });
         }
 
         const existingUser = await User.findOne({ email });
 
         if (existingUser) {
-            return res.status(409).json({ message: 'User already exists' });
+            return res.status(409).json({ success: false, message: 'User already exists' });
         }
 
         const user = await User.create({ name, email, password, role: role || 'user' });
+
+        // If provider with availability fields, create availability record
+        if (user.role === 'provider' && dayOfWeek !== undefined && startTime && endTime) {
+            await ProviderAvailability.create({
+                provider: user._id,
+                dayOfWeek: parseInt(dayOfWeek),
+                startTime,
+                endTime, 
+                isActive: true,
+            });
+        }
 
         const token = generateToken(user._id, user.role);
         setTokenCookie(res, token);
@@ -27,9 +39,13 @@ export const register = async (req, res) => {
         const userWithoutPassword = user.toObject();
         delete userWithoutPassword.password;
 
-        res.status(201).json({ message: 'User registered successfully', user: userWithoutPassword });
+        res.status(201).json({
+            success: true,
+            message: 'User registered successfully',
+            data: { user: userWithoutPassword },
+        });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        res.status(500).json({ success: false, message: err.message });
     }
 };
 
@@ -38,19 +54,19 @@ export const login = async (req, res) => {
         const { email, password } = req.body;
 
         if (!email || !password) {
-            return res.status(400).json({ message: 'Email and password are required' });
+            return res.status(400).json({ success: false, message: 'Email and password are required' });
         }
 
         const user = await User.findOne({ email });
 
         if (!user) {
-            return res.status(401).json({ message: 'Invalid email or password' });
+            return res.status(401).json({ success: false, message: 'Invalid email or password' });
         }
 
         const isMatch = await user.comparePassword(password);
 
         if (!isMatch) {
-            return res.status(401).json({ message: 'Invalid email or password' });
+            return res.status(401).json({ success: false, message: 'Invalid email or password' });
         }
 
         const token = generateToken(user._id, user.role);
@@ -59,13 +75,17 @@ export const login = async (req, res) => {
         const userWithoutPassword = user.toObject();
         delete userWithoutPassword.password;
 
-        res.status(200).json({ message: 'Login successful', user: userWithoutPassword });
+        res.status(200).json({
+            success: true,
+            message: 'Login successful',
+            data: { user: userWithoutPassword },
+        });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        res.status(500).json({ success: false, message: err.message });
     }
 };
 
 export const logout = (req, res) => {
     res.clearCookie('token');
-    res.status(200).json({ message: 'Logout successful' });
+    res.status(200).json({ success: true, message: 'Logout successful' });
 };

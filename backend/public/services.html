@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Services Testing - SlotWise Backend</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header>
+        <h1>🛠️ Services Testing</h1>
+        <nav>
+            <a href="/test/">← Back to Dashboard</a>
+            <a href="/test/auth.html">Auth →</a>
+            <a href="/test/availability.html">Availability →</a>
+            <a href="/test/booking.html">Booking →</a>
+        </nav>
+    </header>
+
+    <div id="auth-status" class="auth-status not-authenticated">Not authenticated</div>
+    <div id="alert-container" class="hidden"></div>
+
+    <div class="row">
+        <div class="card">
+            <h2>Create Service</h2>
+            <p class="endpoint method-post">POST /api/v1/service/</p>
+            <p><em>Requires: provider role + auth</em></p>
+            <form id="create-service-form">
+                <div class="form-group">
+                    <label>Service Name</label>
+                    <input type="text" name="name" placeholder="Haircut" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" name="description" placeholder="Professional haircut service" required>
+                </div>
+                <div class="form-group">
+                    <label>Price</label>
+                    <input type="number" name="price" placeholder="25.00" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Duration (minutes)</label>
+                    <input type="number" name="duration" placeholder="30" min="5" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Create Service</button>
+            </form>
+            <div id="create-response" class="hidden"></div>
+        </div>
+
+        <div class="card">
+            <h2>Get All Services</h2>
+            <p class="endpoint method-get">GET /api/v1/service/all-services</p>
+            <p><em>No auth required</em></p>
+            <button id="get-all-services" class="btn btn-primary btn-block">Fetch All Services</button>
+            <div id="get-all-response" class="hidden"></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="card">
+            <h2>Get Service by ID</h2>
+            <p class="endpoint method-get">GET /api/v1/service/:id</p>
+            <form id="get-service-form">
+                <div class="form-group">
+                    <label>Service ID</label>
+                    <input type="text" name="id" placeholder="64a7b1c2d3e4f5a6b7c8d9e0" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Get Service</button>
+            </form>
+            <div id="get-by-id-response" class="hidden"></div>
+        </div>
+
+        <div class="card">
+            <h2>My Services (Provider)</h2>
+            <p class="endpoint method-get">GET /api/v1/service/my-services</p>
+            <p><em>Requires: provider role + auth</em></p>
+            <button id="get-my-services" class="btn btn-primary btn-block">Fetch My Services</button>
+            <div id="get-my-response" class="hidden"></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="card">
+            <h2>Update Service</h2>
+            <p class="endpoint method-patch">PATCH /api/v1/service/:id</p>
+            <p><em>Requires: provider role + auth</em></p>
+            <form id="update-service-form">
+                <div class="form-group">
+                    <label>Service ID</label>
+                    <input type="text" name="id" placeholder="Service ID" required>
+                </div>
+                <div class="form-group">
+                    <label>New Name (optional)</label>
+                    <input type="text" name="name" placeholder="Updated name">
+                </div>
+                <div class="form-group">
+                    <label>New Description (optional)</label>
+                    <input type="text" name="description" placeholder="Updated description">
+                </div>
+                <div class="form-group">
+                    <label>New Price (optional)</label>
+                    <input type="number" name="price" placeholder="30.00" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>New Duration (minutes, optional)</label>
+                    <input type="number" name="duration" placeholder="30" min="5">
+                </div>
+                <button type="submit" class="btn btn-warning btn-block">Update Service</button>
+            </form>
+            <div id="update-response" class="hidden"></div>
+        </div>
+
+        <div class="card">
+            <h2>Delete Service</h2>
+            <p class="endpoint method-delete">DELETE /api/v1/service/:id</p>
+            <p><em>Requires: provider role + auth</em></p>
+            <form id="delete-service-form">
+                <div class="form-group">
+                    <label>Service ID</label>
+                    <input type="text" name="id" placeholder="Service ID" required>
+                </div>
+                <button type="submit" class="btn btn-danger btn-block">Delete Service</button>
+            </form>
+            <div id="delete-response" class="hidden"></div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        function checkAuth() {
+            if (document.cookie.includes('token=')) {
+                const el = document.getElementById('auth-status');
+                el.textContent = 'Authenticated (token cookie present)';
+                el.className = 'auth-status authenticated';
+            }
+        }
+
+        document.getElementById('create-service-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            const data = {
+                name: fd.get('name'),
+                description: fd.get('description'),
+                price: fd.get('price'),
+                duration: fd.get('duration'),
+            };
+            const result = await window.apiRequest('/service/', {
+                method: 'POST',
+                body: JSON.stringify(data),
+            });
+            window.displayResponse('create-response', result);
+        });
+
+        document.getElementById('get-all-services').addEventListener('click', async () => {
+            const result = await window.apiRequest('/service/all-services', {
+                method: 'GET',
+            });
+            window.displayResponse('get-all-response', result);
+        });
+
+        document.getElementById('get-service-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            const id = fd.get('id');
+            const result = await window.apiRequest(`/service/${id}`, {
+                method: 'GET',
+            });
+            window.displayResponse('get-by-id-response', result);
+        });
+
+        document.getElementById('get-my-services').addEventListener('click', async () => {
+            const result = await window.apiRequest('/service/my-services', {
+                method: 'GET',
+            });
+            window.displayResponse('get-my-response', result);
+        });
+
+        document.getElementById('update-service-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            const id = fd.get('id');
+            const data = {};
+            if (fd.get('name')) data.name = fd.get('name');
+            if (fd.get('description')) data.description = fd.get('description');
+            if (fd.get('price')) data.price = fd.get('price');
+            if (fd.get('duration')) data.duration = fd.get('duration');
+            const result = await window.apiRequest(`/service/${id}`, {
+                method: 'PATCH',
+                body: JSON.stringify(data),
+            });
+            window.displayResponse('update-response', result);
+        });
+
+        document.getElementById('delete-service-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            const id = fd.get('id');
+            const result = await window.apiRequest(`/service/${id}`, {
+                method: 'DELETE',
+            });
+            window.displayResponse('delete-response', result);
+        });
+
+        checkAuth();
+    </script>
+</body>
+</html>

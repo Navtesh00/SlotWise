@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SlotWise Backend - Test Dashboard</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header>
+        <h1>🎯 SlotWise Backend Test Dashboard</h1>
+        <nav>
+            <a href="/test/auth.html">Auth Testing</a>
+            <a href="/test/services.html">Services Testing</a>
+            <a href="/test/availability.html">Availability Testing</a>
+            <a href="/test/booking.html">Booking Testing</a>
+        </nav>
+    </header>
+
+    <div class="card">
+        <h2>Overview</h2>
+        <p>This dashboard provides static HTML pages for testing the SlotWise backend API.</p>
+    </div>
+
+    <div class="row">
+        <div class="card">
+            <h2>🔐 Authentication</h2>
+            <p>Test user registration, login, and logout. Authentication uses HTTP-only cookies.</p>
+            <div class="endpoint method-post">POST /api/v1/auth/register</div>
+            <div class="endpoint method-post">POST /api/v1/auth/login</div>
+            <div class="endpoint method-delete">DELETE /api/v1/auth/logout</div>
+            <a href="/test/auth.html" class="btn btn-primary btn-block">Go to Auth Testing</a>
+        </div>
+
+        <div class="card">
+            <h2>🛠️ Services</h2>
+            <p>Test service CRUD operations. Providers can create, read, update, and delete their services.</p>
+            <div class="endpoint method-get">GET /api/v1/service/all-services</div>
+            <div class="endpoint method-get">GET /api/v1/service/my-services</div>
+            <div class="endpoint method-get">GET /api/v1/service/:id</div>
+            <div class="endpoint method-post">POST /api/v1/service/</div>
+            <div class="endpoint method-patch">PATCH /api/v1/service/:id</div>
+            <div class="endpoint method-delete">DELETE /api/v1/service/:id</div>
+            <a href="/test/services.html" class="btn btn-primary btn-block">Go to Services Testing</a>
+        </div>
+
+        <div class="card">
+            <h2>📅 Availability</h2>
+            <p>Test provider availability slots, exceptions, and public slot lookup.</p>
+            <div class="endpoint method-get">GET /api/v1/availability/availability</div>
+            <div class="endpoint method-get">GET /api/v1/availability/</div>
+            <div class="endpoint method-post">POST /api/v1/availability/</div>
+            <div class="endpoint method-post">POST /api/v1/availability/exception</div>
+            <div class="endpoint method-delete">DELETE /api/v1/availability/exception/:id</div>
+            <a href="/test/availability.html" class="btn btn-primary btn-block">Go to Availability Testing</a>
+        </div>
+
+        <div class="card">
+            <h2>📋 Booking</h2>
+            <p>Test appointment booking, approval, rejection, and cancellation workflows.</p>
+            <div class="endpoint method-post">POST /api/v1/booking/request</div>
+            <div class="endpoint method-get">GET /api/v1/booking/me</div>
+            <div class="endpoint method-get">GET /api/v1/booking/provider/requests</div>
+            <div class="endpoint method-patch">PATCH /api/v1/booking/:id/approve</div>
+            <div class="endpoint method-patch">PATCH /api/v1/booking/:id/reject</div>
+            <div class="endpoint method-patch">PATCH /api/v1/booking/:id/cancel</div>
+            <a href="/test/booking.html" class="btn btn-primary btn-block">Go to Booking Testing</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>🔗 Quick API Reference</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Endpoint</th>
+                    <th>Auth Required</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge badge-success">POST</span></td>
+                    <td>/api/v1/auth/register</td>
+                    <td>No</td>
+                    <td>Register a new user</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-success">POST</span></td>
+                    <td>/api/v1/auth/login</td>
+                    <td>No</td>
+                    <td>Login and get auth cookie</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-danger">DELETE</span></td>
+                    <td>/api/v1/auth/logout</td>
+                    <td>No</td>
+                    <td>Logout and clear cookie</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-success">GET</span></td>
+                    <td>/api/v1/service/all-services</td>
+                    <td>No</td>
+                    <td>Get all services</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-success">GET</span></td>
+                    <td>/api/v1/service/my-services</td>
+                    <td>Yes (provider)</td>
+                    <td>Get provider's own services</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-success">GET</span></td>
+                    <td>/api/v1/service/:id</td>
+                    <td>No</td>
+                    <td>Get service by ID</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-primary">POST</span></td>
+                    <td>/api/v1/service/</td>
+                    <td>Yes (provider)</td>
+                    <td>Create a new service</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-warning">PATCH</span></td>
+                    <td>/api/v1/service/:id</td>
+                    <td>Yes (provider)</td>
+                    <td>Update a service</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-danger">DELETE</span></td>
+                    <td>/api/v1/service/:id</td>
+                    <td>Yes (provider)</td>
+                    <td>Delete a service</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-success">GET</span></td>
+                    <td>/api/v1/availability/availability</td>
+                    <td>No</td>
+                    <td>Get available slots for a provider</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-success">GET</span></td>
+                    <td>/api/v1/availability/</td>
+                    <td>Yes (provider)</td>
+                    <td>Get provider's availability settings</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-primary">POST</span></td>
+                    <td>/api/v1/availability/</td>
+                    <td>Yes (provider)</td>
+                    <td>Set provider availability</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-primary">POST</span></td>
+                    <td>/api/v1/availability/exception</td>
+                    <td>Yes (provider)</td>
+                    <td>Add availability exception</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-danger">DELETE</span></td>
+                    <td>/api/v1/availability/exception/:id</td>
+                    <td>Yes (provider)</td>
+                    <td>Delete availability exception</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-primary">POST</span></td>
+                    <td>/api/v1/booking/request</td>
+                    <td>Yes (user)</td>
+                    <td>Request a booking</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-success">GET</span></td>
+                    <td>/api/v1/booking/me</td>
+                    <td>Yes (user)</td>
+                    <td>Get customer's appointments</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-success">GET</span></td>
+                    <td>/api/v1/booking/provider/requests</td>
+                    <td>Yes (provider)</td>
+                    <td>Get provider's pending requests</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-warning">PATCH</span></td>
+                    <td>/api/v1/booking/:id/approve</td>
+                    <td>Yes (provider)</td>
+                    <td>Approve appointment</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-warning">PATCH</span></td>
+                    <td>/api/v1/booking/:id/reject</td>
+                    <td>Yes (provider)</td>
+                    <td>Reject appointment</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-warning">PATCH</span></td>
+                    <td>/api/v1/booking/:id/cancel</td>
+                    <td>Yes (user)</td>
+                    <td>Cancel appointment</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script src="/js/api.js"></script>
+</body>
+</html>

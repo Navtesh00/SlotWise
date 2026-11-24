@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Testing - SlotWise Backend</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header>
+        <h1>📋 Booking Testing</h1>
+        <nav>
+            <a href="/test/">← Back to Dashboard</a>
+            <a href="/test/auth.html">Auth →</a>
+            <a href="/test/services.html">Services →</a>
+            <a href="/test/availability.html">Availability →</a>
+        </nav>
+    </header>
+
+    <div id="auth-status" class="auth-status not-authenticated">Not authenticated</div>
+    <div id="alert-container" class="hidden"></div>
+
+    <div class="row">
+        <div class="card">
+            <h2>Request Booking (Customer)</h2>
+            <p class="endpoint method-post">POST /api/v1/booking/request</p>
+            <p><em>Requires: user role + auth</em></p>
+            <form id="request-booking-form">
+                <div class="form-group">
+                    <label>Provider ID</label>
+                    <input type="text" name="providerId" placeholder="Provider MongoDB ID" required>
+                </div>
+                <div class="form-group">
+                    <label>Service ID</label>
+                    <input type="text" name="serviceId" placeholder="Service MongoDB ID" required>
+                </div>
+                <div class="form-group">
+                    <label>Date (YYYY-MM-DD)</label>
+                    <input type="date" name="slotDate" required>
+                </div>
+                <div class="form-group">
+                    <label>Start Time (HH:mm)</label>
+                    <input type="time" name="slotStartTime" required>
+                </div>
+                <div class="form-group">
+                    <label>End Time (HH:mm)</label>
+                    <input type="time" name="slotEndTime" required>
+                </div>
+                <div class="form-group">
+                    <label>Notes (optional)</label>
+                    <input type="text" name="notes" placeholder="Any special requests?">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Request Booking</button>
+            </form>
+            <div id="request-booking-response" class="hidden"></div>
+        </div>
+
+        <div class="card">
+            <h2>My Appointments (Customer)</h2>
+            <p class="endpoint method-get">GET /api/v1/booking/me</p>
+            <p><em>Requires: user role + auth</em></p>
+            <button id="get-my-appointments" class="btn btn-primary btn-block">Fetch My Appointments</button>
+            <div id="get-my-appointments-response" class="hidden"></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="card">
+            <h2>Provider Requests (Provider)</h2>
+            <p class="endpoint method-get">GET /api/v1/booking/provider/requests</p>
+            <p><em>Requires: provider role + auth</em></p>
+            <button id="get-provider-requests" class="btn btn-primary btn-block">Fetch Provider Requests</button>
+            <div id="get-provider-requests-response" class="hidden"></div>
+        </div>
+
+        <div class="card">
+            <h2>Approve / Reject Appointment (Provider)</h2>
+            <p class="endpoint method-patch">PATCH /api/v1/booking/:id/approve</p>
+            <p class="endpoint method-patch">PATCH /api/v1/booking/:id/reject</p>
+            <p><em>Requires: provider role + auth</em></p>
+            <form id="approve-reject-form">
+                <div class="form-group">
+                    <label>Appointment ID</label>
+                    <input type="text" name="id" placeholder="Appointment MongoDB ID" required>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button type="button" id="approve-btn" class="btn btn-success">Approve</button>
+                    <button type="button" id="reject-btn" class="btn btn-danger">Reject</button>
+                </div>
+            </form>
+            <div id="approve-reject-response" class="hidden"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Cancel Appointment (Customer)</h2>
+        <p class="endpoint method-patch">PATCH /api/v1/booking/:id/cancel</p>
+        <p><em>Requires: user role + auth</em></p>
+        <form id="cancel-appointment-form">
+            <div class="form-group">
+                <label>Appointment ID</label>
+                <input type="text" name="id" placeholder="Appointment MongoDB ID" required>
+            </div>
+            <button type="submit" class="btn btn-danger btn-block">Cancel Appointment</button>
+        </form>
+        <div id="cancel-appointment-response" class="hidden"></div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        function checkAuth() {
+            if (document.cookie.includes('token=')) {
+                const el = document.getElementById('auth-status');
+                el.textContent = 'Authenticated (token cookie present)';
+                el.className = 'auth-status authenticated';
+            }
+        }
+
+        document.getElementById('request-booking-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            const data = {
+                providerId: fd.get('providerId'),
+                serviceId: fd.get('serviceId'),
+                slotDate: fd.get('slotDate'),
+                slotStartTime: fd.get('slotStartTime'),
+                slotEndTime: fd.get('slotEndTime'),
+                notes: fd.get('notes') || undefined,
+            };
+            const result = await window.apiRequest('/booking/request', {
+                method: 'POST',
+                body: JSON.stringify(data),
+            });
+            window.displayResponse('request-booking-response', result);
+        });
+
+        document.getElementById('get-my-appointments').addEventListener('click', async () => {
+            const result = await window.apiRequest('/booking/me', {
+                method: 'GET',
+            });
+            window.displayResponse('get-my-appointments-response', result);
+        });
+
+        document.getElementById('get-provider-requests').addEventListener('click', async () => {
+            const result = await window.apiRequest('/booking/provider/requests', {
+                method: 'GET',
+            });
+            window.displayResponse('get-provider-requests-response', result);
+        });
+
+        document.getElementById('approve-btn').addEventListener('click', async () => {
+            const id = document.querySelector('#approve-reject-form input[name="id"]').value;
+            if (!id) {
+                alert('Please enter an Appointment ID');
+                return;
+            }
+            const result = await window.apiRequest(`/booking/${id}/approve`, {
+                method: 'PATCH',
+            });
+            window.displayResponse('approve-reject-response', result);
+        });
+
+        document.getElementById('reject-btn').addEventListener('click', async () => {
+            const id = document.querySelector('#approve-reject-form input[name="id"]').value;
+            if (!id) {
+                alert('Please enter an Appointment ID');
+                return;
+            }
+            const result = await window.apiRequest(`/booking/${id}/reject`, {
+                method: 'PATCH',
+            });
+            window.displayResponse('approve-reject-response', result);
+        });
+
+        document.getElementById('cancel-appointment-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            const id = fd.get('id');
+            const result = await window.apiRequest(`/booking/${id}/cancel`, {
+                method: 'PATCH',
+            });
+            window.displayResponse('cancel-appointment-response', result);
+        });
+
+        checkAuth();
+    </script>
+</body>
+</html>

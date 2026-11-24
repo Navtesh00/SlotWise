@@ -3,9 +3,9 @@ import {
     getAllServices,
     getMyServices,
     getServiceById,
-    createServiceController as createService,
-    updateServiceController as updateService,
-    deleteServiceController as deleteService,
+    createService,
+    updateService,
+    deleteService,
 } from '../controllers/service.controllers.js';
 import { protect } from '../middleware/auth.middleware.js';
 import { authorize } from '../middleware/admin.middleware.js';

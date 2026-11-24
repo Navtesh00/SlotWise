@@ -142,3 +142,10 @@ dist
 .svelte-kit
 
 # End of https://www.toptal.com/developers/gitignore/api/node
+
+# Kilo config
+.kilo/
+
+# Python cache
+__pycache__/
+*.pyc

@@ -13,6 +13,7 @@ export const createServiceSchema = z.object({
         name: z.string().min(2, 'Service name must be at least 2 characters'),
         description: z.string().min(5, 'Description must be at least 5 characters'),
         price: z.coerce.number().positive('Price must be a positive number'),
+        duration: z.coerce.number().int().min(5, 'Duration must be at least 5 minutes'),
         userId: z.string().optional(),
     }),
 });
@@ -25,5 +26,6 @@ export const updateServiceSchema = z.object({
         name: z.string().min(2).optional(),
         description: z.string().min(5).optional(),
         price: z.coerce.number().positive().optional(),
+        duration: z.coerce.number().int().min(5, 'Duration must be at least 5 minutes').optional(),
     }),
 });

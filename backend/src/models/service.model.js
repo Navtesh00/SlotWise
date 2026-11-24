@@ -20,6 +20,11 @@ const serviceSchema = new mongoose.Schema(
             ref: 'User',
             required: true,
         },
+        duration: {
+            type: Number,
+            required: [true, 'Service duration is required'],
+            min: [5, 'Duration must be at least 5 minutes'],
+        },
     },
     { timestamps: true }
 );

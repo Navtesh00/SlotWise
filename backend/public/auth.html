@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Testing - SlotWise Backend</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header>
+        <h1>🔐 Authentication Testing</h1>
+        <nav>
+            <a href="/test/">← Back to Dashboard</a>
+            <a href="/test/services.html">Services →</a>
+            <a href="/test/availability.html">Availability →</a>
+            <a href="/test/booking.html">Booking →</a>
+        </nav>
+    </header>
+
+    <div id="auth-status" class="auth-status not-authenticated">
+        Not authenticated
+    </div>
+
+    <div id="alert-container" class="hidden"></div>
+
+    <div class="row">
+        <div class="card">
+            <h2>Register</h2>
+            <p class="endpoint method-post">POST /api/v1/auth/register</p>
+            <form id="register-form">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" name="name" placeholder="John Doe" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" placeholder="john@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" placeholder="••••••••" minlength="6" required>
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select name="role" id="role-select">
+                        <option value="user">User (Customer)</option>
+                        <option value="provider">Provider</option>
+                    </select>
+                </div>
+
+                <!-- Provider Availability Fields (shown when role=provider) -->
+                <div id="provider-availability-fields" class="hidden">
+                    <h3 style="margin-bottom: 0.75rem; font-size: 1rem; color: var(--text-secondary);">Provider Availability</h3>
+                    <div class="form-group">
+                        <label>Day of Week (0=Sunday, 6=Saturday)</label>
+                        <input type="number" name="dayOfWeek" min="0" max="6" value="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Start Time (HH:mm)</label>
+                        <input type="time" name="startTime" value="09:00" required>
+                    </div>
+                    <div class="form-group">
+                        <label>End Time (HH:mm)</label>
+                        <input type="time" name="endTime" value="17:00" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Register</button>
+            </form>
+            <div id="register-response" class="hidden"></div>
+        </div>
+
+        <div class="card">
+            <h2>Login</h2>
+            <p class="endpoint method-post">POST /api/v1/auth/login</p>
+            <form id="login-form">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" placeholder="john@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Login</button>
+            </form>
+            <div id="login-response" class="hidden"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Logout</h2>
+        <p class="endpoint method-delete">DELETE /api/v1/auth/logout</p>
+        <button id="logout-btn" class="btn btn-danger">Logout</button>
+        <div id="logout-response" class="hidden"></div>
+    </div>
+
+    <div class="card">
+        <h2>Test Users (for quick testing)</h2>
+        <p>Use these credentials to quickly test the auth flow:</p>
+        <table>
+            <thead>
+                <tr><th>Email</th><th>Password</th><th>Role</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>customer@test.com</td><td>password123</td><td>user</td></tr>
+                <tr><td>provider@test.com</td><td>password123</td><td>provider</td></tr>
+            </tbody>
+        </table>
+        <p><em>Note: You must register these users first before they can login.</em></p>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        async function checkAuth() {
+            if (document.cookie.includes('token=')) {
+                const el = document.getElementById('auth-status');
+                el.textContent = 'Authenticated (token cookie present)';
+                el.className = 'auth-status authenticated';
+            }
+        }
+
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            const data = {
+                name: fd.get('name'),
+                email: fd.get('email'),
+                password: fd.get('password'),
+                role: fd.get('role'),
+            };
+
+            // Include availability fields if provider
+            if (data.role === 'provider') {
+                data.dayOfWeek = parseInt(fd.get('dayOfWeek'));
+                data.startTime = fd.get('startTime');
+                data.endTime = fd.get('endTime');
+            }
+
+            const result = await window.apiRequest('/auth/register', {
+                method: 'POST',
+                body: JSON.stringify(data),
+            });
+            window.displayResponse('register-response', result);
+            if (result.ok && document.cookie.includes('token=')) {
+                const el = document.getElementById('auth-status');
+                el.textContent = 'Authenticated (token cookie present)';
+                el.className = 'auth-status authenticated';
+            }
+        });
+
+        // Toggle provider availability fields based on role selection
+        const roleSelect = document.getElementById('role-select');
+        const availabilityFields = document.getElementById('provider-availability-fields');
+
+        function toggleAvailabilityFields() {
+            if (roleSelect.value === 'provider') {
+                availabilityFields.classList.remove('hidden');
+            } else {
+                availabilityFields.classList.add('hidden');
+            }
+        }
+
+        roleSelect.addEventListener('change', toggleAvailabilityFields);
+        // Initialize on load
+        toggleAvailabilityFields();
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            const data = {
+                email: fd.get('email'),
+                password: fd.get('password'),
+            };
+            const result = await window.apiRequest('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify(data),
+            });
+            window.displayResponse('login-response', result);
+            if (result.ok && document.cookie.includes('token=')) {
+                const el = document.getElementById('auth-status');
+                el.textContent = 'Authenticated (token cookie present)';
+                el.className = 'auth-status authenticated';
+            }
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            const result = await window.apiRequest('/auth/logout', {
+                method: 'DELETE',
+            });
+            window.displayResponse('logout-response', result);
+            if (result.ok) {
+                document.getElementById('auth-status').textContent = 'Not authenticated';
+                document.getElementById('auth-status').className = 'auth-status not-authenticated';
+            }
+        });
+
+        checkAuth();
+    </script>
+</body>
+</html>
